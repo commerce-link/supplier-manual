@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ManualCsvRowParserTest {
@@ -58,6 +59,39 @@ class ManualCsvRowParserTest {
 
         // then
         assertFalse(parsed.item().inStock());
+    }
+
+    @Test
+    void nonNumericPriceThrowsInParseButTryParseSkipsIt() {
+        // given
+        String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "abc", "PLN", "1", "2"};
+
+        // when / then
+        assertThrows(NumberFormatException.class, () -> parser.parse(row));
+        assertTrue(parser.tryParse(row).isEmpty());
+    }
+
+    @Test
+    void nonNumericQuantityThrowsInParseButTryParseSkipsIt() {
+        // given
+        String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "10,00", "PLN", "x", "2"};
+
+        // when / then
+        assertThrows(NumberFormatException.class, () -> parser.parse(row));
+        assertTrue(parser.tryParse(row).isEmpty());
+    }
+
+    @Test
+    void shortRowUsesDefaultsForMissingQuantityAndLeadTime() {
+        // given
+        String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "10,00"};
+
+        // when
+        ParsedRow parsed = parser.parse(row);
+
+        // then
+        assertEquals(0, parsed.item().qty());
+        assertEquals(2, parsed.item().leadTimeDays());
     }
 
     @Test

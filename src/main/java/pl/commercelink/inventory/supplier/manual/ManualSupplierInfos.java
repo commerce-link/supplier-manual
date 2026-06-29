@@ -14,10 +14,6 @@ public final class ManualSupplierInfos {
     private ManualSupplierInfos() {
     }
 
-    public static SupplierInfo forLabel(String label) {
-        return forIdentity(ManualSupplierNames.identityFor(label));
-    }
-
     public static SupplierInfo forIdentity(String identity) {
         return new SupplierInfo(
                 identity,
