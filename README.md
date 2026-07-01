@@ -57,7 +57,6 @@ Row rules:
 
 | Class | Responsibility |
 |-------|----------------|
-| `ManualSupplierNames` | identity helpers (`PREFIX`, `isManual`, `label`, `identityFor`) |
-| `ManualSupplierInfos` | canonical `SupplierInfo` factory |
+| `ManualSupplierInfos` | canonical `SupplierInfo` factory + identity helpers (`PREFIX`, `isManual`, `label`, `identityFor`) |
 | `ManualCsvRowParser` | parses one canonical CSV row into `ParsedRow` |
 | `ManualSupplierDescriptor` | `SupplierProviderDescriptor` (no download, CSV feed format `;`) |
