@@ -13,7 +13,7 @@ public class ManualSupplierDescriptor implements SupplierProviderDescriptor {
     private final String identity;
 
     public ManualSupplierDescriptor(String label) {
-        this.identity = ManualSupplierNames.identityFor(label);
+        this.identity = ManualSupplierInfos.identityFor(label);
     }
 
     @Override

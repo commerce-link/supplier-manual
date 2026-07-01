@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ManualCsvRowParserTest {
 
     private final ManualCsvRowParser parser =
-            new ManualCsvRowParser(ManualSupplierNames.identityFor("Hurtownia A"));
+            new ManualCsvRowParser(ManualSupplierInfos.identityFor("Hurtownia A"));
 
     @Test
     void parsesCanonicalRowWithCommaDecimal() {
