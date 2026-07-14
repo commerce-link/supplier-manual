@@ -4,11 +4,24 @@ import pl.commercelink.inventory.supplier.api.CsvRowParser;
 import pl.commercelink.inventory.supplier.api.InventoryItem;
 import pl.commercelink.inventory.supplier.api.ParsedRow;
 import pl.commercelink.inventory.supplier.api.Taxonomy;
-import pl.commercelink.taxonomy.ProductCategory;
 
-import java.util.Arrays;
+import java.util.List;
 
 public class ManualCsvRowParser implements CsvRowParser {
+
+    static final List<String> CATEGORIES = List.of(
+            "CPU", "Cooler", "GPU", "Motherboard", "PSU", "Storage", "Memory", "Case", "Fan",
+            "ModdingPC", "Other",
+            "Services",
+            "Laptops", "Desktops", "Workstations", "Servers", "AllInOnePCs", "GraphicsTablets", "Software",
+            "Smartphones", "StationaryPhones", "Tablets", "SmartphoneCases", "ScreenProtectors",
+            "Chargers", "Powerbanks", "MobileHeadphones",
+            "Printers", "LaserPrinters", "InkPrinters", "PhotoPrinters", "LargeFormatPrinters",
+            "LabelPrinters", "Printers3D", "Scanners", "MultifunctionPrinters",
+            "Displays", "Keyboards", "Mice", "KeyboardsAndMice", "Headphones", "Microphones",
+            "Webcams", "Speakers", "MousePads",
+            "GamingChairs", "OfficeChairs", "GamingDesks", "OfficeDesks", "StandingDesks",
+            "MonitorMounts", "Footrests");
 
     private static final int EAN = 0;
     private static final int MFN = 1;
@@ -40,7 +53,7 @@ public class ManualCsvRowParser implements CsvRowParser {
         String currency = at(row, CURRENCY);
         int qty = parseInt(at(row, QTY), 0);
         int leadTimeDays = parseInt(at(row, LEAD_TIME), ManualSupplierInfos.DEFAULT_LEAD_TIME_DAYS);
-        ProductCategory category = category(at(row, CATEGORY));
+        String category = category(at(row, CATEGORY));
 
         InventoryItem item = new InventoryItem(
                 ean, mfn, netPrice, currency, qty, leadTimeDays,
@@ -62,10 +75,10 @@ public class ManualCsvRowParser implements CsvRowParser {
         return Integer.parseInt(value);
     }
 
-    private static ProductCategory category(String raw) {
-        return Arrays.stream(ProductCategory.values())
-                .filter(c -> c.eq(raw))
+    private static String category(String raw) {
+        return CATEGORIES.stream()
+                .filter(c -> c.equalsIgnoreCase(raw))
                 .findFirst()
-                .orElse(ProductCategory.Other);
+                .orElse(Taxonomy.OTHER);
     }
 }
