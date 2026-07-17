@@ -2,7 +2,6 @@ package pl.commercelink.inventory.supplier.manual;
 
 import org.junit.jupiter.api.Test;
 import pl.commercelink.inventory.supplier.api.ParsedRow;
-import pl.commercelink.taxonomy.ProductCategory;
 
 import java.util.Optional;
 
@@ -32,7 +31,7 @@ class ManualCsvRowParserTest {
         assertEquals("manual:Hurtownia A", parsed.item().supplier());
         assertTrue(parsed.item().sellable());
         assertTrue(parsed.item().inStock());
-        assertEquals(ProductCategory.Mice, parsed.taxonomy().category());
+        assertEquals("Mice", parsed.taxonomy().category());
         assertEquals("BrandX", parsed.taxonomy().brand());
     }
 
@@ -45,7 +44,7 @@ class ManualCsvRowParserTest {
         ParsedRow parsed = parser.parse(row);
 
         // then
-        assertEquals(ProductCategory.Other, parsed.taxonomy().category());
+        assertEquals("Other", parsed.taxonomy().category());
         assertEquals(2, parsed.item().leadTimeDays());
     }
 
