@@ -5,23 +5,9 @@ import pl.commercelink.inventory.supplier.api.InventoryItem;
 import pl.commercelink.inventory.supplier.api.ParsedRow;
 import pl.commercelink.inventory.supplier.api.Taxonomy;
 
-import java.util.List;
-
 public class ManualCsvRowParser implements CsvRowParser {
 
-    static final List<String> CATEGORIES = List.of(
-            "CPU", "Cooler", "GPU", "Motherboard", "PSU", "Storage", "Memory", "Case", "Fan",
-            "ModdingPC", "Other",
-            "Services",
-            "Laptops", "Desktops", "Workstations", "Servers", "AllInOnePCs", "GraphicsTablets", "Software",
-            "Smartphones", "StationaryPhones", "Tablets", "SmartphoneCases", "ScreenProtectors",
-            "Chargers", "Powerbanks", "MobileHeadphones",
-            "Printers", "LaserPrinters", "InkPrinters", "PhotoPrinters", "LargeFormatPrinters",
-            "LabelPrinters", "Printers3D", "Scanners", "MultifunctionPrinters",
-            "Displays", "Keyboards", "Mice", "KeyboardsAndMice", "Headphones", "Microphones",
-            "Webcams", "Speakers", "MousePads",
-            "GamingChairs", "OfficeChairs", "GamingDesks", "OfficeDesks", "StandingDesks",
-            "MonitorMounts", "Footrests");
+    static final String SERVICES = "Services";
 
     private static final int EAN = 0;
     private static final int MFN = 1;
@@ -53,14 +39,16 @@ public class ManualCsvRowParser implements CsvRowParser {
         String currency = at(row, CURRENCY);
         int qty = parseInt(at(row, QTY), 0);
         int leadTimeDays = parseInt(at(row, LEAD_TIME), ManualSupplierInfos.DEFAULT_LEAD_TIME_DAYS);
-        String category = category(at(row, CATEGORY));
+        String entered = at(row, CATEGORY);
+        String category = SERVICES.equalsIgnoreCase(entered) ? SERVICES : null;
+        String rawCategory = category == null && !entered.isEmpty() ? entered : null;
 
         InventoryItem item = new InventoryItem(
                 ean, mfn, netPrice, currency, qty, leadTimeDays,
                 supplierIdentity, true, qty > 0, false);
         Taxonomy taxonomy = new Taxonomy(
                 ean, mfn, at(row, BRAND), name, category,
-                ManualSupplierInfos.ACCURACY_SCORE, null, null);
+                ManualSupplierInfos.ACCURACY_SCORE, null, null, rawCategory);
         return new ParsedRow(item, taxonomy);
     }
 
@@ -73,12 +61,5 @@ public class ManualCsvRowParser implements CsvRowParser {
             return fallback;
         }
         return Integer.parseInt(value);
-    }
-
-    private static String category(String raw) {
-        return CATEGORIES.stream()
-                .filter(c -> c.equalsIgnoreCase(raw))
-                .findFirst()
-                .orElse(Taxonomy.OTHER);
     }
 }
