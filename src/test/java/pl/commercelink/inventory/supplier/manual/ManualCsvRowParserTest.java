@@ -35,18 +35,16 @@ class ManualCsvRowParserTest {
         assertTrue(parsed.item().sellable());
         assertTrue(parsed.item().inStock());
         assertFalse(parsed.item().inDelivery());
-        assertEquals("BrandY", parsed.taxonomy().brand());
-        assertEquals("Karta graficzna", parsed.taxonomy().name());
-        assertNull(parsed.taxonomy().category());
-        assertEquals("GPU", parsed.taxonomy().rawCategory());
-        assertEquals(5, parsed.taxonomy().dataAccuracyScore());
-        assertNull(parsed.taxonomy().netWeightInGrams());
-        assertNull(parsed.taxonomy().grossWeightInGrams());
-        assertFalse(parsed.taxonomy().isProcessable());
+        assertEquals("BrandY", parsed.product().brand());
+        assertEquals("Karta graficzna", parsed.product().name());
+        assertEquals("GPU", parsed.product().rawCategory());
+        assertEquals(5, parsed.product().dataAccuracyScore());
+        assertNull(parsed.product().netWeightInGrams());
+        assertNull(parsed.product().grossWeightInGrams());
     }
 
     @Test
-    void arbitraryCategoryTextIsPassedVerbatimWithoutOtherFallback() {
+    void arbitraryCategoryTextIsPassedVerbatimAsRawCategory() {
         // given
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "mysz gamingowa RGB", "10,00", "PLN", "1", "2"};
 
@@ -54,12 +52,11 @@ class ManualCsvRowParserTest {
         ParsedRow parsed = parser.parse(row);
 
         // then
-        assertNull(parsed.taxonomy().category());
-        assertEquals("mysz gamingowa RGB", parsed.taxonomy().rawCategory());
+        assertEquals("mysz gamingowa RGB", parsed.product().rawCategory());
     }
 
     @Test
-    void servicesCategoryIsRecognizedRegardlessOfCase() {
+    void enteredCategoryIsPassedVerbatimIncludingServicesMarker() {
         // given
         String[] lower = {"5901234123457", "MFN-1", "BrandX", "Montaż PC", "services", "50,00", "PLN", "1", "2"};
         String[] upper = {"5901234123457", "MFN-2", "BrandX", "Serwis laptopa", "SERVICES", "80,00", "PLN", "1", "2"};
@@ -69,14 +66,12 @@ class ManualCsvRowParserTest {
         ParsedRow parsedUpper = parser.parse(upper);
 
         // then
-        assertEquals("Services", parsedLower.taxonomy().category());
-        assertNull(parsedLower.taxonomy().rawCategory());
-        assertTrue(parsedLower.taxonomy().isProcessable());
-        assertEquals("Services", parsedUpper.taxonomy().category());
+        assertEquals("services", parsedLower.product().rawCategory());
+        assertEquals("SERVICES", parsedUpper.product().rawCategory());
     }
 
     @Test
-    void blankCategoryYieldsNullCategoryAndNullRawCategory() {
+    void blankCategoryYieldsNullRawCategory() {
         // given
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "", "10,00", "PLN", "1", "2"};
 
@@ -84,8 +79,7 @@ class ManualCsvRowParserTest {
         ParsedRow parsed = parser.parse(row);
 
         // then
-        assertNull(parsed.taxonomy().category());
-        assertNull(parsed.taxonomy().rawCategory());
+        assertNull(parsed.product().rawCategory());
     }
 
     @Test

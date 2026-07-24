@@ -3,11 +3,9 @@ package pl.commercelink.inventory.supplier.manual;
 import pl.commercelink.inventory.supplier.api.CsvRowParser;
 import pl.commercelink.inventory.supplier.api.InventoryItem;
 import pl.commercelink.inventory.supplier.api.ParsedRow;
-import pl.commercelink.inventory.supplier.api.Taxonomy;
+import pl.commercelink.inventory.supplier.api.SupplierProduct;
 
 public class ManualCsvRowParser implements CsvRowParser {
-
-    static final String SERVICES = "Services";
 
     private static final int EAN = 0;
     private static final int MFN = 1;
@@ -40,16 +38,15 @@ public class ManualCsvRowParser implements CsvRowParser {
         int qty = parseInt(at(row, QTY), 0);
         int leadTimeDays = parseInt(at(row, LEAD_TIME), ManualSupplierInfos.DEFAULT_LEAD_TIME_DAYS);
         String entered = at(row, CATEGORY);
-        String category = SERVICES.equalsIgnoreCase(entered) ? SERVICES : null;
-        String rawCategory = category == null && !entered.isEmpty() ? entered : null;
+        String rawCategory = entered.isEmpty() ? null : entered;
 
         InventoryItem item = new InventoryItem(
                 ean, mfn, netPrice, currency, qty, leadTimeDays,
                 supplierIdentity, true, qty > 0, false);
-        Taxonomy taxonomy = new Taxonomy(
-                ean, mfn, at(row, BRAND), name, category,
+        SupplierProduct product = new SupplierProduct(
+                ean, mfn, at(row, BRAND), name,
                 ManualSupplierInfos.ACCURACY_SCORE, null, null, rawCategory);
-        return new ParsedRow(item, taxonomy);
+        return new ParsedRow(item, product);
     }
 
     private static String at(String[] row, int index) {
