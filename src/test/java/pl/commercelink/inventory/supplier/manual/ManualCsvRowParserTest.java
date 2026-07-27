@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,7 +17,73 @@ class ManualCsvRowParserTest {
             new ManualCsvRowParser(ManualSupplierInfos.identityFor("Hurtownia A"));
 
     @Test
-    void parsesCanonicalRowWithCommaDecimal() {
+    void parsesFullRowAndPassesEnteredCategoryAsRawCategory() {
+        // given
+        String[] row = {"5901234123457", "MFN-9", "BrandY", "Karta graficzna", "GPU", "1999,99", "PLN", "4", "5"};
+
+        // when
+        ParsedRow parsed = parser.parse(row);
+
+        // then
+        assertEquals("5901234123457", parsed.item().ean());
+        assertEquals("MFN-9", parsed.item().mfn());
+        assertEquals(1999.99, parsed.item().netPrice());
+        assertEquals("PLN", parsed.item().currency());
+        assertEquals(4, parsed.item().qty());
+        assertEquals(5, parsed.item().leadTimeDays());
+        assertEquals("manual:Hurtownia A", parsed.item().supplier());
+        assertTrue(parsed.item().sellable());
+        assertTrue(parsed.item().inStock());
+        assertFalse(parsed.item().inDelivery());
+        assertEquals("BrandY", parsed.product().brand());
+        assertEquals("Karta graficzna", parsed.product().name());
+        assertEquals("GPU", parsed.product().rawCategory());
+        assertEquals(5, parsed.product().dataAccuracyScore());
+        assertNull(parsed.product().netWeightInGrams());
+        assertNull(parsed.product().grossWeightInGrams());
+    }
+
+    @Test
+    void arbitraryCategoryTextIsPassedVerbatimAsRawCategory() {
+        // given
+        String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "mysz gamingowa RGB", "10,00", "PLN", "1", "2"};
+
+        // when
+        ParsedRow parsed = parser.parse(row);
+
+        // then
+        assertEquals("mysz gamingowa RGB", parsed.product().rawCategory());
+    }
+
+    @Test
+    void enteredCategoryIsPassedVerbatimIncludingServicesMarker() {
+        // given
+        String[] lower = {"5901234123457", "MFN-1", "BrandX", "Montaż PC", "services", "50,00", "PLN", "1", "2"};
+        String[] upper = {"5901234123457", "MFN-2", "BrandX", "Serwis laptopa", "SERVICES", "80,00", "PLN", "1", "2"};
+
+        // when
+        ParsedRow parsedLower = parser.parse(lower);
+        ParsedRow parsedUpper = parser.parse(upper);
+
+        // then
+        assertEquals("services", parsedLower.product().rawCategory());
+        assertEquals("SERVICES", parsedUpper.product().rawCategory());
+    }
+
+    @Test
+    void blankCategoryYieldsNullRawCategory() {
+        // given
+        String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "", "10,00", "PLN", "1", "2"};
+
+        // when
+        ParsedRow parsed = parser.parse(row);
+
+        // then
+        assertNull(parsed.product().rawCategory());
+    }
+
+    @Test
+    void parsesCommaDecimalPrice() {
         // given
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "12,50", "PLN", "7", "3"};
 
@@ -24,28 +91,9 @@ class ManualCsvRowParserTest {
         ParsedRow parsed = parser.parse(row);
 
         // then
-        assertEquals("5901234123457", parsed.item().ean());
         assertEquals(12.50, parsed.item().netPrice());
         assertEquals(7, parsed.item().qty());
         assertEquals(3, parsed.item().leadTimeDays());
-        assertEquals("manual:Hurtownia A", parsed.item().supplier());
-        assertTrue(parsed.item().sellable());
-        assertTrue(parsed.item().inStock());
-        assertEquals("Mice", parsed.taxonomy().category());
-        assertEquals("BrandX", parsed.taxonomy().brand());
-    }
-
-    @Test
-    void unknownCategoryFallsBackToOther() {
-        // given
-        String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Nonexistent", "10,00", "PLN", "1", ""};
-
-        // when
-        ParsedRow parsed = parser.parse(row);
-
-        // then
-        assertEquals("Other", parsed.taxonomy().category());
-        assertEquals(2, parsed.item().leadTimeDays());
     }
 
     @Test
