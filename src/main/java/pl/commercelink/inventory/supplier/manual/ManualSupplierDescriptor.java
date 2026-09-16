@@ -13,7 +13,20 @@ public class ManualSupplierDescriptor implements SupplierProviderDescriptor {
     private final String identity;
 
     public ManualSupplierDescriptor(String label) {
-        this.identity = ManualSupplierInfos.identityFor(label);
+        this(label, false);
+    }
+
+    private ManualSupplierDescriptor(String value, boolean raw) {
+        this.identity = raw ? value : ManualSupplierInfos.identityFor(value);
+    }
+
+    /**
+     * Builds the descriptor from a stored connection identity taken as-is, whatever its shape
+     * (legacy {@code manual:Label} or tokened {@code manual-k7f3a9c2}). The label constructor
+     * above can only mint the legacy shape, so callers holding an identity must use this one.
+     */
+    public static ManualSupplierDescriptor forIdentity(String identity) {
+        return new ManualSupplierDescriptor(identity, true);
     }
 
     @Override
