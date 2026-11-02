@@ -47,16 +47,16 @@ Row rules:
 | Rule | Behaviour |
 |------|-----------|
 | Required fields | `(ean` or `mfn)` **and** `name` **and** `net_price`; otherwise the row is skipped |
-| `category` | matched case-insensitively to `ProductCategory`, fallback `Other` |
+| `category` | passed as entered (blank = none); the app maps it to its taxonomy |
 | `qty` | `inStock = qty > 0` |
 | `lead_time_days` | defaults to `2` when blank |
 | Flags | `sellable = true`, `inDelivery = false` |
-| Malformed numbers | the row is skipped (`CsvRowParser.tryParse` swallows the error) |
+| Malformed numbers | the parser throws and the app skips the row |
 
 ## Classes
 
 | Class | Responsibility |
 |-------|----------------|
 | `ManualSupplierInfos` | canonical `SupplierInfo` factory + identity helpers (`PREFIX`, `isManual`, `label`, `identityFor`) |
-| `ManualCsvRowParser` | parses one canonical CSV row into `ParsedRow` |
+| `ManualCsvRowParser` | parses one canonical CSV row into a `FeedItem`; the app adds the identity and accuracy score from `SupplierInfo` |
 | `ManualSupplierDescriptor` | `SupplierProviderDescriptor` (no download, CSV feed format `;`) |

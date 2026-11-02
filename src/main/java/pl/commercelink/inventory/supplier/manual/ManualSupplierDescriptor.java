@@ -36,7 +36,7 @@ public class ManualSupplierDescriptor implements SupplierProviderDescriptor {
 
     @Override
     public FeedFormat feedFormat() {
-        return new FeedFormat.Csv(new ManualCsvRowParser(identity), ';');
+        return new FeedFormat.Csv(new ManualCsvRowParser(), ';');
     }
 
     @Override

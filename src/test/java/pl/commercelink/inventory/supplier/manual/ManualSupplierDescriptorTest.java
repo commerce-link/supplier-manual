@@ -43,20 +43,6 @@ class ManualSupplierDescriptorTest {
     }
 
     @Test
-    void forIdentityStampsParsedRowsWithTheIdentity() {
-        // given
-        ManualSupplierDescriptor tokened = ManualSupplierDescriptor.forIdentity("manual-k7f3a9c2");
-
-        // when
-        FeedFormat.Csv csv = assertInstanceOf(FeedFormat.Csv.class, tokened.feedFormat());
-        var row = csv.parser().tryParse(new String[]{
-                "4711111111111", "MFN-1", "Brand", "Name", "Cat", "10.0", "PLN", "3", "2"}).orElseThrow();
-
-        // then
-        assertEquals("manual-k7f3a9c2", row.item().supplier());
-    }
-
-    @Test
     void providerDoesNotDownloadAnything() throws Exception {
         // when
         Optional<?> downloaded = descriptor.create(Map.of()).download();

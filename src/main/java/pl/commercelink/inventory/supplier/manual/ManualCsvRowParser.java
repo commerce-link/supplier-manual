@@ -1,9 +1,7 @@
 package pl.commercelink.inventory.supplier.manual;
 
 import pl.commercelink.inventory.supplier.api.CsvRowParser;
-import pl.commercelink.inventory.supplier.api.InventoryItem;
-import pl.commercelink.inventory.supplier.api.ParsedRow;
-import pl.commercelink.inventory.supplier.api.SupplierProduct;
+import pl.commercelink.inventory.supplier.api.FeedItem;
 
 public class ManualCsvRowParser implements CsvRowParser {
 
@@ -17,14 +15,8 @@ public class ManualCsvRowParser implements CsvRowParser {
     private static final int QTY = 7;
     private static final int LEAD_TIME = 8;
 
-    private final String supplierIdentity;
-
-    public ManualCsvRowParser(String supplierIdentity) {
-        this.supplierIdentity = supplierIdentity;
-    }
-
     @Override
-    public ParsedRow parse(String[] row) {
+    public FeedItem parse(String[] row) {
         String ean = at(row, EAN);
         String mfn = at(row, MFN);
         String name = at(row, NAME);
@@ -34,19 +26,12 @@ public class ManualCsvRowParser implements CsvRowParser {
         }
 
         double netPrice = Double.parseDouble(priceText.replace(',', '.'));
-        String currency = at(row, CURRENCY);
         int qty = parseInt(at(row, QTY), 0);
         int leadTimeDays = parseInt(at(row, LEAD_TIME), ManualSupplierInfos.DEFAULT_LEAD_TIME_DAYS);
         String entered = at(row, CATEGORY);
-        String rawCategory = entered.isEmpty() ? null : entered;
+        String category = entered.isEmpty() ? null : entered;
 
-        InventoryItem item = new InventoryItem(
-                ean, mfn, netPrice, currency, qty, leadTimeDays,
-                supplierIdentity, true, qty > 0, false);
-        SupplierProduct product = new SupplierProduct(
-                ean, mfn, at(row, BRAND), name,
-                ManualSupplierInfos.ACCURACY_SCORE, null, null, rawCategory);
-        return new ParsedRow(item, product);
+        return new ManualFeedItem(ean, mfn, at(row, BRAND), name, category, netPrice, at(row, CURRENCY), qty, leadTimeDays);
     }
 
     private static String at(String[] row, int index) {
@@ -58,5 +43,59 @@ public class ManualCsvRowParser implements CsvRowParser {
             return fallback;
         }
         return Integer.parseInt(value);
+    }
+
+    private record ManualFeedItem(String ean, String mfn, String brand, String name, String category,
+                                  double netPrice, String currency, int qty, int leadTimeDays) implements FeedItem {
+
+        @Override
+        public String getEan() {
+            return ean;
+        }
+
+        @Override
+        public String getMfn() {
+            return mfn;
+        }
+
+        @Override
+        public String getBrand() {
+            return brand;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String getCategory() {
+            return category;
+        }
+
+        @Override
+        public double getNetPrice() {
+            return netPrice;
+        }
+
+        @Override
+        public String getCurrency() {
+            return currency;
+        }
+
+        @Override
+        public int getQty() {
+            return qty;
+        }
+
+        @Override
+        public int getLeadTimeDays() {
+            return leadTimeDays;
+        }
+
+        @Override
+        public boolean isInStock() {
+            return qty > 0;
+        }
     }
 }

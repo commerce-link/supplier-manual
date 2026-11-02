@@ -1,9 +1,7 @@
 package pl.commercelink.inventory.supplier.manual;
 
 import org.junit.jupiter.api.Test;
-import pl.commercelink.inventory.supplier.api.ParsedRow;
-
-import java.util.Optional;
+import pl.commercelink.inventory.supplier.api.FeedItem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -13,46 +11,44 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ManualCsvRowParserTest {
 
-    private final ManualCsvRowParser parser =
-            new ManualCsvRowParser(ManualSupplierInfos.identityFor("Hurtownia A"));
+    private final ManualCsvRowParser parser = new ManualCsvRowParser();
 
     @Test
-    void parsesFullRowAndPassesEnteredCategoryAsRawCategory() {
+    void parsesFullRowAndPassesEnteredCategory() {
         // given
         String[] row = {"5901234123457", "MFN-9", "BrandY", "Karta graficzna", "GPU", "1999,99", "PLN", "4", "5"};
 
         // when
-        ParsedRow parsed = parser.parse(row);
+        FeedItem item = parser.parse(row);
 
         // then
-        assertEquals("5901234123457", parsed.item().ean());
-        assertEquals("MFN-9", parsed.item().mfn());
-        assertEquals(1999.99, parsed.item().netPrice());
-        assertEquals("PLN", parsed.item().currency());
-        assertEquals(4, parsed.item().qty());
-        assertEquals(5, parsed.item().leadTimeDays());
-        assertEquals("manual:Hurtownia A", parsed.item().supplier());
-        assertTrue(parsed.item().sellable());
-        assertTrue(parsed.item().inStock());
-        assertFalse(parsed.item().inDelivery());
-        assertEquals("BrandY", parsed.product().brand());
-        assertEquals("Karta graficzna", parsed.product().name());
-        assertEquals("GPU", parsed.product().rawCategory());
-        assertEquals(5, parsed.product().dataAccuracyScore());
-        assertNull(parsed.product().netWeightInGrams());
-        assertNull(parsed.product().grossWeightInGrams());
+        assertEquals("5901234123457", item.getEan());
+        assertEquals("MFN-9", item.getMfn());
+        assertEquals("BrandY", item.getBrand());
+        assertEquals("Karta graficzna", item.getName());
+        assertEquals("GPU", item.getCategory());
+        assertEquals(1999.99, item.getNetPrice());
+        assertEquals("PLN", item.getCurrency());
+        assertEquals(4, item.getQty());
+        assertEquals(5, item.getLeadTimeDays());
+        assertTrue(item.isSellable());
+        assertTrue(item.isInStock());
+        assertFalse(item.isInDelivery());
+        assertNull(item.getSku());
+        assertNull(item.getNetWeightInGrams());
+        assertNull(item.getGrossWeightInGrams());
     }
 
     @Test
-    void arbitraryCategoryTextIsPassedVerbatimAsRawCategory() {
+    void arbitraryCategoryTextIsPassedVerbatim() {
         // given
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "mysz gamingowa RGB", "10,00", "PLN", "1", "2"};
 
         // when
-        ParsedRow parsed = parser.parse(row);
+        FeedItem item = parser.parse(row);
 
         // then
-        assertEquals("mysz gamingowa RGB", parsed.product().rawCategory());
+        assertEquals("mysz gamingowa RGB", item.getCategory());
     }
 
     @Test
@@ -62,24 +58,24 @@ class ManualCsvRowParserTest {
         String[] upper = {"5901234123457", "MFN-2", "BrandX", "Serwis laptopa", "SERVICES", "80,00", "PLN", "1", "2"};
 
         // when
-        ParsedRow parsedLower = parser.parse(lower);
-        ParsedRow parsedUpper = parser.parse(upper);
+        FeedItem parsedLower = parser.parse(lower);
+        FeedItem parsedUpper = parser.parse(upper);
 
         // then
-        assertEquals("services", parsedLower.product().rawCategory());
-        assertEquals("SERVICES", parsedUpper.product().rawCategory());
+        assertEquals("services", parsedLower.getCategory());
+        assertEquals("SERVICES", parsedUpper.getCategory());
     }
 
     @Test
-    void blankCategoryYieldsNullRawCategory() {
+    void blankCategoryYieldsNullCategory() {
         // given
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "", "10,00", "PLN", "1", "2"};
 
         // when
-        ParsedRow parsed = parser.parse(row);
+        FeedItem item = parser.parse(row);
 
         // then
-        assertNull(parsed.product().rawCategory());
+        assertNull(item.getCategory());
     }
 
     @Test
@@ -88,12 +84,12 @@ class ManualCsvRowParserTest {
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "12,50", "PLN", "7", "3"};
 
         // when
-        ParsedRow parsed = parser.parse(row);
+        FeedItem item = parser.parse(row);
 
         // then
-        assertEquals(12.50, parsed.item().netPrice());
-        assertEquals(7, parsed.item().qty());
-        assertEquals(3, parsed.item().leadTimeDays());
+        assertEquals(12.50, item.getNetPrice());
+        assertEquals(7, item.getQty());
+        assertEquals(3, item.getLeadTimeDays());
     }
 
     @Test
@@ -102,30 +98,28 @@ class ManualCsvRowParserTest {
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "10,00", "PLN", "0", "2"};
 
         // when
-        ParsedRow parsed = parser.parse(row);
+        FeedItem item = parser.parse(row);
 
         // then
-        assertFalse(parsed.item().inStock());
+        assertFalse(item.isInStock());
     }
 
     @Test
-    void nonNumericPriceThrowsInParseButTryParseSkipsIt() {
+    void nonNumericPriceThrowsInParse() {
         // given
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "abc", "PLN", "1", "2"};
 
         // when / then
         assertThrows(NumberFormatException.class, () -> parser.parse(row));
-        assertTrue(parser.tryParse(row).isEmpty());
     }
 
     @Test
-    void nonNumericQuantityThrowsInParseButTryParseSkipsIt() {
+    void nonNumericQuantityThrowsInParse() {
         // given
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "10,00", "PLN", "x", "2"};
 
         // when / then
         assertThrows(NumberFormatException.class, () -> parser.parse(row));
-        assertTrue(parser.tryParse(row).isEmpty());
     }
 
     @Test
@@ -134,11 +128,11 @@ class ManualCsvRowParserTest {
         String[] row = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "10,00"};
 
         // when
-        ParsedRow parsed = parser.parse(row);
+        FeedItem item = parser.parse(row);
 
         // then
-        assertEquals(0, parsed.item().qty());
-        assertEquals(2, parsed.item().leadTimeDays());
+        assertEquals(0, item.getQty());
+        assertEquals(2, item.getLeadTimeDays());
     }
 
     @Test
@@ -146,11 +140,8 @@ class ManualCsvRowParserTest {
         // given
         String[] row = {"", "", "BrandX", "Mysz", "Mice", "10,00", "PLN", "1", "2"};
 
-        // when
-        Optional<ParsedRow> parsed = parser.tryParse(row);
-
-        // then
-        assertTrue(parsed.isEmpty());
+        // when / then
+        assertNull(parser.parse(row));
     }
 
     @Test
@@ -160,7 +151,7 @@ class ManualCsvRowParserTest {
         String[] noPrice = {"5901234123457", "MFN-1", "BrandX", "Mysz", "Mice", "", "PLN", "1", "2"};
 
         // when / then
-        assertTrue(parser.tryParse(noName).isEmpty());
-        assertTrue(parser.tryParse(noPrice).isEmpty());
+        assertNull(parser.parse(noName));
+        assertNull(parser.parse(noPrice));
     }
 }
